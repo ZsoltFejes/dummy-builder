@@ -6,43 +6,55 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/schollz/progressbar/v3"
 )
 
+func printUnitHelp() {
+	fmt.Println("Accepted storage size units:")
+	fmt.Println("	KB|K - Kilobyte")
+	fmt.Println("	MB|M - Megabyte")
+	fmt.Println("	GB|G - Gigabyte")
+	fmt.Println("	TB|T - Terabyte")
+	fmt.Println("	PB|P - Petabyte")
+	fmt.Println("	EB|E - Exabyte")
+	fmt.Println("	ZB|Z - Yottabyte")
+	os.Exit(2)
+}
+
 func getSize(fileSize string) int {
-	var units = [8]string{"x", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"} // x is there as a place holder, it helps with math later in the function
-	var unitsShort = [8]string{"x", "K", "M", "G", "T", "P", "E", "Z"}   // x is there as a place holder, it helps with math later in the function
+	var units = [8]string{"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"} // x is a place holder, it helps with math later in the function
+	var unitsShort = [8]string{"B", "K", "M", "G", "T", "P", "E", "Z"}   // x is a place holder, it helps with math later in the function
+
+	rSizeString, _ := regexp.Compile(`^\d*`)
+	fileSizeString := rSizeString.FindString(fileSize)
+
+	rUnit, _ := regexp.Compile(`\D*$`)
+	unit := rUnit.FindString(fileSize)
+
 	var chosenUnitIndex int
-	var chosenUnit string
-	for i, unit := range units {
-		if strings.Contains(fileSize, units[i]) {
+	for i := range units {
+		if unit == units[i] {
 			chosenUnitIndex = i
-			chosenUnit = unit
 			break
 		}
-		if strings.Contains(fileSize, unitsShort[i]) {
+		if unit == unitsShort[i] {
 			chosenUnitIndex = i
-			chosenUnit = unitsShort[i]
 			break
+		}
+
+		if i == len(units)-1 && chosenUnitIndex == 0 {
+			fmt.Println("Unit '" + unit + "' unknown")
+			printUnitHelp()
 		}
 	}
-	fileSizeTrimmed := fileSize
-	fileSizeTrimmed = strings.TrimSuffix(fileSizeTrimmed, chosenUnit)
-	fileSizeInt, err := strconv.Atoi(fileSizeTrimmed)
+
+	fileSizeInt, err := strconv.Atoi(fileSizeString)
 	if err != nil {
-		fmt.Println("Unable to find storage size unit")
-		fmt.Println("Accepted storage size units:")
-		fmt.Println("	KB|K - Kilobyte")
-		fmt.Println("	MB|M - Megabyte")
-		fmt.Println("	GB|G - Gigabyte")
-		fmt.Println("	TB|T - Terabyte")
-		fmt.Println("	PB|P - Petabyte")
-		fmt.Println("	EB|E - Exabyte")
-		fmt.Println("	ZB|Z - Yottabyte")
+		fmt.Println("Unable to parse file size")
 		os.Exit(2)
 	}
 	if chosenUnitIndex == 0 {
