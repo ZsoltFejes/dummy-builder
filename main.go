@@ -26,8 +26,8 @@ func printUnitHelp() {
 }
 
 func getSize(fileSize string) int {
-	var units = [8]string{"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"} // x is a place holder, it helps with math later in the function
-	var unitsShort = [8]string{"B", "K", "M", "G", "T", "P", "E", "Z"}   // x is a place holder, it helps with math later in the function
+	var units = [8]string{"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"} 
+	var unitsShort = [8]string{"B", "K", "M", "G", "T", "P", "E", "Z"}   
 
 	rSizeString, _ := regexp.Compile(`^\d*`)
 	fileSizeString := rSizeString.FindString(fileSize)
