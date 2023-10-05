@@ -1,6 +1,8 @@
 package main
 
 import (
+	crypto_rand "crypto/rand"
+	"encoding/binary"
 	"flag"
 	"fmt"
 	"math"
@@ -26,8 +28,8 @@ func printUnitHelp() {
 }
 
 func getSize(fileSize string) int {
-	var units = [8]string{"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"} 
-	var unitsShort = [8]string{"B", "K", "M", "G", "T", "P", "E", "Z"}   
+	var units = [8]string{"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"}
+	var unitsShort = [8]string{"B", "K", "M", "G", "T", "P", "E", "Z"}
 
 	rSizeString, _ := regexp.Compile(`^\d*`)
 	fileSizeString := rSizeString.FindString(fileSize)
@@ -69,11 +71,19 @@ func main() {
 	fileName := flag.String("o", "dummy", "Set where you want to output the dummy file")
 	flag.Parse()
 
+	// Generate crypto seed for random
+	var seed [8]byte
+	_, err := crypto_rand.Read(seed[:])
+	if err != nil {
+		panic("cannot seed math/rand package with cryptographically secure random number generator")
+	}
+	rand.New(rand.NewSource(int64(binary.BigEndian.Uint64(seed[:]))))
+
 	bytesToGenerate := getSize(*fileSize)
 	buffer := 1048576 // 1 MB
 	f, err := os.OpenFile(*fileName, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		print("Unable to create '" + *fileName + "', make sure path exist, check permissions and try again")
+		panic("Unable to create '" + *fileName + "', make sure path exist, check permissions and try again")
 	}
 	defer f.Close()
 	bar := progressbar.NewOptions(bytesToGenerate,
@@ -91,13 +101,19 @@ func main() {
 	for {
 		if bytesToGenerate > buffer {
 			token := make([]byte, buffer)
-			rand.Read(token)
+			_, err = crypto_rand.Read(token)
+			if err != nil {
+				panic("Unable to generate random data")
+			}
 			f.Write(token)
 			bar.Add(buffer)
 			bytesToGenerate -= buffer
 		} else {
 			token := make([]byte, bytesToGenerate)
-			rand.Read(token)
+			crypto_rand.Read(token)
+			if err != nil {
+				panic("Unable to generate random data")
+			}
 			f.Write(token)
 			bar.Add(bytesToGenerate)
 			bytesToGenerate = 0
