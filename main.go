@@ -77,7 +77,7 @@ func main() {
 	if err != nil {
 		panic("cannot seed math/rand package with cryptographically secure random number generator")
 	}
-	rand.New(rand.NewSource(int64(binary.BigEndian.Uint64(seed[:]))))
+	cRand := rand.New(rand.NewSource(int64(binary.BigEndian.Uint64(seed[:]))))
 
 	bytesToGenerate := getSize(*fileSize)
 	buffer := 1048576 // 1 MB
@@ -101,7 +101,7 @@ func main() {
 	for {
 		if bytesToGenerate > buffer {
 			token := make([]byte, buffer)
-			_, err = crypto_rand.Read(token)
+			_, err = cRand.Read(token)
 			if err != nil {
 				panic("Unable to generate random data")
 			}
@@ -110,7 +110,7 @@ func main() {
 			bytesToGenerate -= buffer
 		} else {
 			token := make([]byte, bytesToGenerate)
-			crypto_rand.Read(token)
+			cRand.Read(token)
 			if err != nil {
 				panic("Unable to generate random data")
 			}
